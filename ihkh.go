@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"hawx.me/code/ihkh/flickr"
@@ -17,6 +16,7 @@ var (
 	port   = flag.String("port", "8080", "")
 	socket = flag.String("socket", "", "")
 	userId = flag.String("user-id", "", "")
+	apiKey = flag.String("api-key", "", "")
 )
 
 func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.Ctx, error) {
@@ -58,7 +58,7 @@ func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.Ctx
 func main() {
 	flag.Parse()
 
-	client := flickr.New(os.Getenv("FLICKR_KEY"))
+	client := flickr.New(*apiKey)
 
 	user, err := client.UserInfoForId(*userId)
 	if err != nil {
