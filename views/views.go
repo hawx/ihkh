@@ -2,17 +2,25 @@ package views
 
 import "html/template"
 
-var Photostream = template.Must(template.New("photostream").Parse(photostream)).Execute
+var (
+	Photostream = template.Must(template.New("photostream").Parse(photostream)).Execute
+	Sets        = template.Must(template.New("sets").Parse(sets)).Execute
+)
 
-type Ctx struct {
-	Title       string
-	Photos      []Photo
-	UserInfo    UserInfo
-	Width       int
-	PrevPage    string
-	HasPrevPage bool
-	NextPage    string
-	HasNextPage bool
+type PhotosCtx struct {
+	Title    string
+	UserInfo UserInfo
+	Width    int
+	PrevPage string
+	NextPage string
+	Photos   []Photo
+}
+
+type SetsCtx struct {
+	Title    string
+	UserInfo UserInfo
+	Width    int
+	Sets     []Set
 }
 
 type Photo struct {
@@ -20,6 +28,11 @@ type Photo struct {
 	Src    string
 	Width  int
 	Height int
+}
+
+type Set struct {
+	Id    string
+	Title string
 }
 
 type UserInfo struct {

@@ -5,31 +5,22 @@ import (
 	"strconv"
 )
 
-type photosetsResponse struct {
+type PhotosetsResponse struct {
 	Photosets struct {
 		Photoset []struct {
-			Id    int    `xml:"id,attr"`
+			Id    string `xml:"id,attr"`
 			Title string `xml:"title"`
 		} `xml:"photoset"`
 	} `xml:"photosets"`
 }
 
-func (client *Client) Photosets(nsid string) (sets map[string]int, err error) {
-	var v photosetsResponse
-	_, err = client.get("flickr.photosets.getList", url.Values{
+func (client *Client) Photosets(nsid string) (PhotosetsResponse, error) {
+	var v PhotosetsResponse
+	_, err := client.get("flickr.photosets.getList", url.Values{
 		"user_id": {nsid},
 	}, &v)
 
-	if err != nil {
-		return
-	}
-
-	sets = map[string]int{}
-	for _, set := range v.Photosets.Photoset {
-		sets[set.Title] = set.Id
-	}
-
-	return
+	return v, err
 }
 
 type PhotosetResponse struct {
@@ -47,14 +38,30 @@ type PhotosetResponse struct {
 	} `xml:"photoset"`
 }
 
-func (client *Client) Photoset(nsid string, photosetId, perPage, page int) (PhotosetResponse, error) {
+func (client *Client) Photoset(nsid, photosetId string, perPage, page int) (PhotosetResponse, error) {
 	var v PhotosetResponse
 	_, err := client.get("flickr.photosets.getPhotos", url.Values{
 		"user_id":     {nsid},
-		"photoset_id": {strconv.Itoa(photosetId)},
+		"photoset_id": {photosetId},
 		"page":        {strconv.Itoa(page)},
 		"per_page":    {strconv.Itoa(perPage)},
 		"extras":      {"url_l"},
+	}, &v)
+
+	return v, err
+}
+
+type PhotosetInfo struct {
+	Photoset struct {
+		Title string `xml:"title"`
+	} `xml:"photoset"`
+}
+
+func (client *Client) PhotosetInfo(nsid string, photosetId string) (PhotosetInfo, error) {
+	var v PhotosetInfo
+	_, err := client.get("flickr.photosets.getInfo", url.Values{
+		"user_id":     {nsid},
+		"photoset_id": {photosetId},
 	}, &v)
 
 	return v, err

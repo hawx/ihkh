@@ -20,13 +20,13 @@ var (
 	apiKey = flag.String("api-key", "", "")
 )
 
-func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.Ctx, error) {
+func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.PhotosCtx, error) {
 	resp, err := client.PublicPhotos(userInfo.Id, 10, page)
 	if err != nil {
-		return views.Ctx{}, err
+		return views.PhotosCtx{}, err
 	}
 
-	ctx := views.Ctx{
+	ctx := views.PhotosCtx{
 		Title:    fmt.Sprintf("ihkh : %s", userInfo.UserName),
 		Photos:   []views.Photo{},
 		UserInfo: userInfo,
@@ -52,24 +52,52 @@ func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.Ctx
 	return ctx, nil
 }
 
-func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photoset string, photosetId, page int) (views.Ctx, error) {
-	resp, err := client.Photoset(userInfo.Id, photosetId, 10, page)
+func getPhotosetsCtx(client *flickr.Client, userInfo views.UserInfo) (views.SetsCtx, error) {
+	resp, err := client.Photosets(userInfo.Id)
 	if err != nil {
-		return views.Ctx{}, err
+		return views.SetsCtx{}, err
 	}
 
-	ctx := views.Ctx{
-		Title:    fmt.Sprintf("ihkh : %s : %s", userInfo.UserName, photoset),
+	ctx := views.SetsCtx{
+		Title:    fmt.Sprintf("ihkh : %s", userInfo.UserName),
+		Sets:     []views.Set{},
+		UserInfo: userInfo,
+		Width:    500,
+	}
+
+	for _, set := range resp.Photosets.Photoset {
+		ctx.Sets = append(ctx.Sets, views.Set{
+			Id:    set.Id,
+			Title: set.Title,
+		})
+	}
+
+	return ctx, nil
+}
+
+func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photosetId string, page int) (views.PhotosCtx, error) {
+	info, err := client.PhotosetInfo(userInfo.Id, photosetId)
+	if err != nil {
+		return views.PhotosCtx{}, err
+	}
+
+	resp, err := client.Photoset(userInfo.Id, photosetId, 10, page)
+	if err != nil {
+		return views.PhotosCtx{}, err
+	}
+
+	ctx := views.PhotosCtx{
+		Title:    fmt.Sprintf("ihkh : %s : %s", userInfo.UserName, info.Photoset.Title),
 		Photos:   []views.Photo{},
 		UserInfo: userInfo,
 		Width:    500,
 	}
 
 	if resp.Photos.Page > 1 {
-		ctx.PrevPage = fmt.Sprintf("/set/%s/%d", photoset, resp.Photos.Page-1)
+		ctx.PrevPage = fmt.Sprintf("/set/%s/%d", photosetId, resp.Photos.Page-1)
 	}
 	if resp.Photos.Page != resp.Photos.Pages {
-		ctx.NextPage = fmt.Sprintf("/set/%s/%d", photoset, resp.Photos.Page+1)
+		ctx.NextPage = fmt.Sprintf("/set/%s/%d", photosetId, resp.Photos.Page+1)
 	}
 
 	for _, photo := range resp.Photos.Photo {
@@ -103,12 +131,6 @@ func main() {
 		RealName:   user.Person.Realname,
 	}
 
-	photosets, err := client.Photosets(*userId)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
 	route.HandleFunc("/:page", func(w http.ResponseWriter, r *http.Request) {
 		page, err := strconv.Atoi(route.Vars(r)["page"])
 		if err != nil || page < 1 {
@@ -125,16 +147,27 @@ func main() {
 		views.Photostream(w, ctx)
 	})
 
+	route.HandleFunc("/sets", func(w http.ResponseWriter, r *http.Request) {
+		ctx, err := getPhotosetsCtx(client, userInfo)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		views.Sets(w, ctx)
+	})
+
 	photosetHandler := func(w http.ResponseWriter, r *http.Request) {
 		vars := route.Vars(r)
-		name := vars["name"]
+		setId := vars["set"]
 
 		page, err := strconv.Atoi(vars["page"])
 		if err != nil || page < 1 {
 			page = 1
 		}
 
-		ctx, err := getPhotosetCtx(client, userInfo, name, photosets[name], page)
+		ctx, err := getPhotosetCtx(client, userInfo, setId, page)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(500)
@@ -144,8 +177,8 @@ func main() {
 		views.Photostream(w, ctx)
 	}
 
-	route.HandleFunc("/set/:name", photosetHandler)
-	route.HandleFunc("/set/:name/:page", photosetHandler)
+	route.HandleFunc("/sets/:set", photosetHandler)
+	route.HandleFunc("/sets/:set/:page", photosetHandler)
 
 	serve.Serve(*port, *socket, route.Default)
 }
