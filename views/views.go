@@ -9,9 +9,9 @@ type Ctx struct {
 	Photos      []Photo
 	UserInfo    UserInfo
 	Width       int
-	PrevPage    int
+	PrevPage    string
 	HasPrevPage bool
-	NextPage    int
+	NextPage    string
 	HasNextPage bool
 }
 

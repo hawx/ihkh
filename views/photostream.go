@@ -64,15 +64,15 @@ const photostream = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "h
         {{ end }}
 
         <li class="pagers" style="width: {{.Width}}px;">
-          {{ if .HasPrevPage }}
+          {{ if .PrevPage }}
           <div class="left">
-            <a href="/{{.PrevPage}}" class="backlink">&larr; previous</a>
+            <a href="{{.PrevPage}}" class="backlink">&larr; previous</a>
           </div>
           {{ end }}
 
-          {{ if .HasNextPage }}
+          {{ if .NextPage }}
           <div class="right">
-            <a href="/{{.NextPage}}">next &rarr;</a>
+            <a href="{{.NextPage}}">next &rarr;</a>
           </div>
           {{ end }}
         </li>

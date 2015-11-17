@@ -29,19 +29,7 @@ type PhotosResponse struct {
 		Total   int `xml:"total,attr"`
 
 		Photo []struct {
-			Id             string `xml:"id,attr"`
-			Secret         string `xml:"secret,attr"`
-			Server         string `xml:"server,attr"`
-			Farm           int    `xml:"farm,attr"`
-			Title          string `xml:"title,attr"`
-			License        int    `xml:"license,attr"`
-			DateTaken      string `xml:"datetaken,attr"`
-			DateUploaded   string `xml:"dateuploaded,attr"`
-			Owner          string `xml:"owner,attr"`
-			Tags           string `xml:"tags,attr"`
-			OriginalSecret string `xml:"originalsecret,attr"`
-			OriginalFormat string `xml:"originalformat,attr"`
-
+			Id     string `xml:"id,attr"`
 			Url    string `xml:"url_l,attr"`
 			Height int    `xml:"height_l,attr"`
 			Width  int    `xml:"width_l,attr"`
@@ -55,7 +43,7 @@ func (client *Client) PublicPhotos(nsid string, perPage, page int) (PhotosRespon
 		"user_id":  {nsid},
 		"page":     {strconv.Itoa(page)},
 		"per_page": {strconv.Itoa(perPage)},
-		"extras":   {"date_taken,date_upload,original_format,tags,license,url_l"},
+		"extras":   {"url_l"},
 	}, &v)
 
 	return v, err
