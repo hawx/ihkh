@@ -94,10 +94,10 @@ func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photosetId s
 	}
 
 	if resp.Photos.Page > 1 {
-		ctx.PrevPage = fmt.Sprintf("/set/%s/%d", photosetId, resp.Photos.Page-1)
+		ctx.PrevPage = fmt.Sprintf("/sets/%s/%d", photosetId, resp.Photos.Page-1)
 	}
 	if resp.Photos.Page != resp.Photos.Pages {
-		ctx.NextPage = fmt.Sprintf("/set/%s/%d", photosetId, resp.Photos.Page+1)
+		ctx.NextPage = fmt.Sprintf("/sets/%s/%d", photosetId, resp.Photos.Page+1)
 	}
 
 	for _, photo := range resp.Photos.Photo {
