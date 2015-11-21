@@ -11,7 +11,6 @@ var (
 type PhotosCtx struct {
 	Title    string
 	UserInfo UserInfo
-	Width    int
 	PrevPage string
 	NextPage string
 	Photos   []Photo
@@ -20,14 +19,12 @@ type PhotosCtx struct {
 type SetsCtx struct {
 	Title    string
 	UserInfo UserInfo
-	Width    int
 	Sets     []Set
 }
 
 type TagsCtx struct {
 	Title    string
 	UserInfo UserInfo
-	Width    int
 	Tags     []string
 }
 

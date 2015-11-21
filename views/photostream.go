@@ -10,7 +10,7 @@ const photostream = pre + `<div class="photos">
     </li>
     {{ end }}
 
-    <li class="pagers" style="width: {{.Width}}px;">
+    <li class="pagers" style="width: 500px;">
       {{ if .PrevPage }}
       <div class="left">
         <a href="{{.PrevPage}}" class="backlink">&larr; previous</a>

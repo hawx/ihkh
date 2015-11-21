@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -20,7 +21,52 @@ var (
 	apiKey = flag.String("api-key", "", "")
 )
 
-func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.PhotosCtx, error) {
+type handler struct {
+	client   *flickr.Client
+	userInfo views.UserInfo
+
+	listView func(io.Writer, interface{}) error
+	showView func(io.Writer, interface{}) error
+
+	getAll func(*flickr.Client, views.UserInfo) (interface{}, error)
+	get    func(*flickr.Client, views.UserInfo, string, int) (views.PhotosCtx, error)
+}
+
+func (h *handler) List() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, err := h.getAll(h.client, h.userInfo)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		h.listView(w, ctx)
+	}
+}
+
+func (h *handler) Show() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := route.Vars(r)
+		param := vars["param"]
+
+		page, err := strconv.Atoi(vars["page"])
+		if err != nil || page < 1 {
+			page = 1
+		}
+
+		ctx, err := h.get(h.client, h.userInfo, param, page)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		h.showView(w, ctx)
+	}
+}
+
+func getIndex(client *flickr.Client, userInfo views.UserInfo, _ string, page int) (views.PhotosCtx, error) {
 	resp, err := client.PublicPhotos(userInfo.Id, 10, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
@@ -30,7 +76,6 @@ func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.Pho
 		Title:    fmt.Sprintf("ihkh : %s", userInfo.UserName),
 		Photos:   []views.Photo{},
 		UserInfo: userInfo,
-		Width:    500,
 	}
 
 	if resp.Photos.Page > 1 {
@@ -52,17 +97,16 @@ func getCtx(client *flickr.Client, userInfo views.UserInfo, page int) (views.Pho
 	return ctx, nil
 }
 
-func getPhotosetsCtx(client *flickr.Client, userInfo views.UserInfo) (views.SetsCtx, error) {
+func getAllSets(client *flickr.Client, userInfo views.UserInfo) (interface{}, error) {
 	resp, err := client.Photosets(userInfo.Id)
 	if err != nil {
-		return views.SetsCtx{}, err
+		return nil, err
 	}
 
 	ctx := views.SetsCtx{
 		Title:    fmt.Sprintf("ihkh : %s", userInfo.UserName),
 		Sets:     []views.Set{},
 		UserInfo: userInfo,
-		Width:    500,
 	}
 
 	for _, set := range resp.Photosets.Photoset {
@@ -75,7 +119,7 @@ func getPhotosetsCtx(client *flickr.Client, userInfo views.UserInfo) (views.Sets
 	return ctx, nil
 }
 
-func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photosetId string, page int) (views.PhotosCtx, error) {
+func getSet(client *flickr.Client, userInfo views.UserInfo, photosetId string, page int) (views.PhotosCtx, error) {
 	info, err := client.PhotosetInfo(userInfo.Id, photosetId)
 	if err != nil {
 		return views.PhotosCtx{}, err
@@ -90,7 +134,6 @@ func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photosetId s
 		Title:    fmt.Sprintf("ihkh : %s : %s", userInfo.UserName, info.Photoset.Title),
 		Photos:   []views.Photo{},
 		UserInfo: userInfo,
-		Width:    500,
 	}
 
 	if resp.Photos.Page > 1 {
@@ -112,17 +155,16 @@ func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photosetId s
 	return ctx, nil
 }
 
-func getTagsCtx(client *flickr.Client, userInfo views.UserInfo) (views.TagsCtx, error) {
+func getAllTags(client *flickr.Client, userInfo views.UserInfo) (interface{}, error) {
 	resp, err := client.Tags(userInfo.Id)
 	if err != nil {
-		return views.TagsCtx{}, err
+		return nil, err
 	}
 
 	ctx := views.TagsCtx{
 		Title:    fmt.Sprintf("ihkh : %s", userInfo.UserName),
 		Tags:     []string{},
 		UserInfo: userInfo,
-		Width:    500,
 	}
 
 	for _, tag := range resp.Tags.Tag {
@@ -132,7 +174,7 @@ func getTagsCtx(client *flickr.Client, userInfo views.UserInfo) (views.TagsCtx, 
 	return ctx, nil
 }
 
-func getTagCtx(client *flickr.Client, userInfo views.UserInfo, tag string, page int) (views.PhotosCtx, error) {
+func getTag(client *flickr.Client, userInfo views.UserInfo, tag string, page int) (views.PhotosCtx, error) {
 	resp, err := client.Tag(userInfo.Id, tag, 10, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
@@ -142,7 +184,6 @@ func getTagCtx(client *flickr.Client, userInfo views.UserInfo, tag string, page 
 		Title:    fmt.Sprintf("ihkh : %s : %s", userInfo.UserName, tag),
 		Photos:   []views.Photo{},
 		UserInfo: userInfo,
-		Width:    500,
 	}
 
 	if resp.Photos.Page > 1 {
@@ -183,87 +224,40 @@ func main() {
 		RealName:   user.Person.Realname,
 	}
 
-	route.HandleFunc("/:page", func(w http.ResponseWriter, r *http.Request) {
-		page, err := strconv.Atoi(route.Vars(r)["page"])
-		if err != nil || page < 1 {
-			page = 1
-		}
-
-		ctx, err := getCtx(client, userInfo, page)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		views.Photostream(w, ctx)
-	})
-
-	route.HandleFunc("/sets", func(w http.ResponseWriter, r *http.Request) {
-		ctx, err := getPhotosetsCtx(client, userInfo)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		views.Sets(w, ctx)
-	})
-
-	photosetHandler := func(w http.ResponseWriter, r *http.Request) {
-		vars := route.Vars(r)
-		setId := vars["set"]
-
-		page, err := strconv.Atoi(vars["page"])
-		if err != nil || page < 1 {
-			page = 1
-		}
-
-		ctx, err := getPhotosetCtx(client, userInfo, setId, page)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		views.Photostream(w, ctx)
+	index := &handler{
+		client:   client,
+		userInfo: userInfo,
+		showView: views.Photostream,
+		get:      getIndex,
 	}
 
-	route.HandleFunc("/sets/:set", photosetHandler)
-	route.HandleFunc("/sets/:set/:page", photosetHandler)
+	route.HandleFunc("/:page", index.Show())
 
-	route.HandleFunc("/tags", func(w http.ResponseWriter, r *http.Request) {
-		ctx, err := getTagsCtx(client, userInfo)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		views.Tags(w, ctx)
-	})
-
-	tagHandler := func(w http.ResponseWriter, r *http.Request) {
-		vars := route.Vars(r)
-		tag := vars["tag"]
-
-		page, err := strconv.Atoi(vars["page"])
-		if err != nil || page < 1 {
-			page = 1
-		}
-
-		ctx, err := getTagCtx(client, userInfo, tag, page)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		views.Photostream(w, ctx)
+	sets := &handler{
+		client:   client,
+		userInfo: userInfo,
+		listView: views.Sets,
+		showView: views.Photostream,
+		getAll:   getAllSets,
+		get:      getSet,
 	}
 
-	route.HandleFunc("/tags/:tag", tagHandler)
-	route.HandleFunc("/tags/:tag/:page", tagHandler)
+	route.HandleFunc("/sets", sets.List())
+	route.HandleFunc("/sets/:param", sets.Show())
+	route.HandleFunc("/sets/:param/:page", sets.Show())
+
+	tags := &handler{
+		client:   client,
+		userInfo: userInfo,
+		listView: views.Tags,
+		showView: views.Photostream,
+		getAll:   getAllTags,
+		get:      getTag,
+	}
+
+	route.HandleFunc("/tags", tags.List())
+	route.HandleFunc("/tags/:param", tags.Show())
+	route.HandleFunc("/tags/:param/:page", tags.Show())
 
 	serve.Serve(*port, *socket, route.Default)
 }
