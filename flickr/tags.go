@@ -11,14 +11,14 @@ type TagsResponse struct {
 	} `xml:"who>tags"`
 }
 
-func (client *Client) Tags(nsid string) (TagsResponse, error) {
+func (client *httpClient) Tags(nsid string) (TagsResponse, error) {
 	var v TagsResponse
 	_, err := client.get("flickr.tags.getListUser", url.Values{"user_id": {nsid}}, &v)
 
 	return v, err
 }
 
-func (client *Client) Tag(nsid, tag string, perPage, page int) (PhotosResponse, error) {
+func (client *httpClient) Tag(nsid, tag string, perPage, page int) (PhotosResponse, error) {
 	var v PhotosResponse
 	_, err := client.get("flickr.photos.search", url.Values{
 		"user_id":  {nsid},

@@ -12,7 +12,19 @@ const (
 	defaultUserAgent = "me.hawx.ihkh"
 )
 
-type Client struct {
+type Client interface {
+	UserInfo(nsid string) (UserInfoResponse, error)
+	PublicPhotos(nsid string, perPage, page int) (PhotosResponse, error)
+
+	Photosets(nsid string) (PhotosetsResponse, error)
+	Photoset(nsid, photosetId string, perPage, page int) (PhotosetResponse, error)
+	PhotosetInfo(nsid string, photosetId string) (PhotosetInfo, error)
+
+	Tags(nsid string) (TagsResponse, error)
+	Tag(nsid, tag string, perPage, page int) (PhotosResponse, error)
+}
+
+type httpClient struct {
 	client *http.Client
 	apiKey string
 
@@ -20,10 +32,10 @@ type Client struct {
 	UserAgent string
 }
 
-func New(apiKey string) *Client {
+func New(apiKey string) Client {
 	baseURL, _ := url.Parse(defaultBaseURL)
 
-	return &Client{
+	return &httpClient{
 		client: http.DefaultClient,
 		apiKey: apiKey,
 
@@ -32,7 +44,7 @@ func New(apiKey string) *Client {
 	}
 }
 
-func (client *Client) get(method string, params url.Values, v interface{}) (*http.Response, error) {
+func (client *httpClient) get(method string, params url.Values, v interface{}) (*http.Response, error) {
 	params.Add("method", method)
 	params.Add("api_key", client.apiKey)
 

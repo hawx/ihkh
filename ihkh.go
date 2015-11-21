@@ -22,14 +22,14 @@ var (
 )
 
 type handler struct {
-	client   *flickr.Client
+	client   flickr.Client
 	userInfo views.UserInfo
 
 	listView func(io.Writer, interface{}) error
 	showView func(io.Writer, interface{}) error
 
-	getAll func(*flickr.Client, views.UserInfo) (interface{}, error)
-	get    func(*flickr.Client, views.UserInfo, string, int) (views.PhotosCtx, error)
+	getAll func(flickr.Client, views.UserInfo) (interface{}, error)
+	get    func(flickr.Client, views.UserInfo, string, int) (views.PhotosCtx, error)
 }
 
 func (h *handler) List() http.HandlerFunc {
@@ -66,7 +66,7 @@ func (h *handler) Show() http.HandlerFunc {
 	}
 }
 
-func getIndex(client *flickr.Client, userInfo views.UserInfo, _ string, page int) (views.PhotosCtx, error) {
+func getIndex(client flickr.Client, userInfo views.UserInfo, _ string, page int) (views.PhotosCtx, error) {
 	resp, err := client.PublicPhotos(userInfo.Id, 10, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
@@ -97,7 +97,7 @@ func getIndex(client *flickr.Client, userInfo views.UserInfo, _ string, page int
 	return ctx, nil
 }
 
-func getAllSets(client *flickr.Client, userInfo views.UserInfo) (interface{}, error) {
+func getAllSets(client flickr.Client, userInfo views.UserInfo) (interface{}, error) {
 	resp, err := client.Photosets(userInfo.Id)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func getAllSets(client *flickr.Client, userInfo views.UserInfo) (interface{}, er
 	return ctx, nil
 }
 
-func getSet(client *flickr.Client, userInfo views.UserInfo, photosetId string, page int) (views.PhotosCtx, error) {
+func getSet(client flickr.Client, userInfo views.UserInfo, photosetId string, page int) (views.PhotosCtx, error) {
 	info, err := client.PhotosetInfo(userInfo.Id, photosetId)
 	if err != nil {
 		return views.PhotosCtx{}, err
@@ -155,7 +155,7 @@ func getSet(client *flickr.Client, userInfo views.UserInfo, photosetId string, p
 	return ctx, nil
 }
 
-func getAllTags(client *flickr.Client, userInfo views.UserInfo) (interface{}, error) {
+func getAllTags(client flickr.Client, userInfo views.UserInfo) (interface{}, error) {
 	resp, err := client.Tags(userInfo.Id)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func getAllTags(client *flickr.Client, userInfo views.UserInfo) (interface{}, er
 	return ctx, nil
 }
 
-func getTag(client *flickr.Client, userInfo views.UserInfo, tag string, page int) (views.PhotosCtx, error) {
+func getTag(client flickr.Client, userInfo views.UserInfo, tag string, page int) (views.PhotosCtx, error) {
 	resp, err := client.Tag(userInfo.Id, tag, 10, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
@@ -210,7 +210,7 @@ func main() {
 
 	client := flickr.New(*apiKey)
 
-	user, err := client.UserInfoForId(*userId)
+	user, err := client.UserInfo(*userId)
 	if err != nil {
 		log.Println(err)
 		return
@@ -218,10 +218,10 @@ func main() {
 
 	userInfo := views.UserInfo{
 		Id:         *userId,
-		PhotosUrl:  user.Person.PhotosUrl,
-		ProfileUrl: user.Person.ProfileUrl,
-		UserName:   user.Person.Username,
-		RealName:   user.Person.Realname,
+		PhotosUrl:  user.PhotosUrl,
+		ProfileUrl: user.ProfileUrl,
+		UserName:   user.Username,
+		RealName:   user.Realname,
 	}
 
 	index := &handler{

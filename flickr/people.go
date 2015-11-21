@@ -5,17 +5,15 @@ import (
 	"strconv"
 )
 
-type PeopleGetInfoResponse struct {
-	Person struct {
-		Username   string `xml:"username"`
-		Realname   string `xml:"realname"`
-		PhotosUrl  string `xml:"photosurl"`
-		ProfileUrl string `xml:"profileurl"`
-	} `xml:"person"`
+type UserInfoResponse struct {
+	Username   string `xml:"person>username"`
+	Realname   string `xml:"person>realname"`
+	PhotosUrl  string `xml:"person>photosurl"`
+	ProfileUrl string `xml:"person>profileurl"`
 }
 
-func (client *Client) UserInfoForId(nsid string) (PeopleGetInfoResponse, error) {
-	var v PeopleGetInfoResponse
+func (client *httpClient) UserInfo(nsid string) (UserInfoResponse, error) {
+	var v UserInfoResponse
 	_, err := client.get("flickr.people.getInfo", url.Values{"user_id": {nsid}}, &v)
 
 	return v, err
@@ -37,7 +35,7 @@ type PhotosResponse struct {
 	} `xml:"photos"`
 }
 
-func (client *Client) PublicPhotos(nsid string, perPage, page int) (PhotosResponse, error) {
+func (client *httpClient) PublicPhotos(nsid string, perPage, page int) (PhotosResponse, error) {
 	var v PhotosResponse
 	_, err := client.get("flickr.people.getPublicPhotos", url.Values{
 		"user_id":  {nsid},

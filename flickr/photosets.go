@@ -14,7 +14,7 @@ type PhotosetsResponse struct {
 	} `xml:"photosets"`
 }
 
-func (client *Client) Photosets(nsid string) (PhotosetsResponse, error) {
+func (client *httpClient) Photosets(nsid string) (PhotosetsResponse, error) {
 	var v PhotosetsResponse
 	_, err := client.get("flickr.photosets.getList", url.Values{
 		"user_id": {nsid},
@@ -38,7 +38,7 @@ type PhotosetResponse struct {
 	} `xml:"photoset"`
 }
 
-func (client *Client) Photoset(nsid, photosetId string, perPage, page int) (PhotosetResponse, error) {
+func (client *httpClient) Photoset(nsid, photosetId string, perPage, page int) (PhotosetResponse, error) {
 	var v PhotosetResponse
 	_, err := client.get("flickr.photosets.getPhotos", url.Values{
 		"user_id":     {nsid},
@@ -57,7 +57,7 @@ type PhotosetInfo struct {
 	} `xml:"photoset"`
 }
 
-func (client *Client) PhotosetInfo(nsid string, photosetId string) (PhotosetInfo, error) {
+func (client *httpClient) PhotosetInfo(nsid string, photosetId string) (PhotosetInfo, error) {
 	var v PhotosetInfo
 	_, err := client.get("flickr.photosets.getInfo", url.Values{
 		"user_id":     {nsid},
