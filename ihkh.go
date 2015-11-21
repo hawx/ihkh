@@ -112,6 +112,58 @@ func getPhotosetCtx(client *flickr.Client, userInfo views.UserInfo, photosetId s
 	return ctx, nil
 }
 
+func getTagsCtx(client *flickr.Client, userInfo views.UserInfo) (views.TagsCtx, error) {
+	resp, err := client.Tags(userInfo.Id)
+	if err != nil {
+		return views.TagsCtx{}, err
+	}
+
+	ctx := views.TagsCtx{
+		Title:    fmt.Sprintf("ihkh : %s", userInfo.UserName),
+		Tags:     []string{},
+		UserInfo: userInfo,
+		Width:    500,
+	}
+
+	for _, tag := range resp.Tags.Tag {
+		ctx.Tags = append(ctx.Tags, tag)
+	}
+
+	return ctx, nil
+}
+
+func getTagCtx(client *flickr.Client, userInfo views.UserInfo, tag string, page int) (views.PhotosCtx, error) {
+	resp, err := client.Tag(userInfo.Id, tag, 10, page)
+	if err != nil {
+		return views.PhotosCtx{}, err
+	}
+
+	ctx := views.PhotosCtx{
+		Title:    fmt.Sprintf("ihkh : %s : %s", userInfo.UserName, tag),
+		Photos:   []views.Photo{},
+		UserInfo: userInfo,
+		Width:    500,
+	}
+
+	if resp.Photos.Page > 1 {
+		ctx.PrevPage = fmt.Sprintf("/tags/%s/%d", tag, resp.Photos.Page-1)
+	}
+	if resp.Photos.Page != resp.Photos.Pages {
+		ctx.NextPage = fmt.Sprintf("/tags/%s/%d", tag, resp.Photos.Page+1)
+	}
+
+	for _, photo := range resp.Photos.Photo {
+		ctx.Photos = append(ctx.Photos, views.Photo{
+			Id:     photo.Id,
+			Src:    photo.Url,
+			Width:  photo.Width,
+			Height: photo.Height,
+		})
+	}
+
+	return ctx, nil
+}
+
 func main() {
 	flag.Parse()
 
@@ -179,6 +231,39 @@ func main() {
 
 	route.HandleFunc("/sets/:set", photosetHandler)
 	route.HandleFunc("/sets/:set/:page", photosetHandler)
+
+	route.HandleFunc("/tags", func(w http.ResponseWriter, r *http.Request) {
+		ctx, err := getTagsCtx(client, userInfo)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		views.Tags(w, ctx)
+	})
+
+	tagHandler := func(w http.ResponseWriter, r *http.Request) {
+		vars := route.Vars(r)
+		tag := vars["tag"]
+
+		page, err := strconv.Atoi(vars["page"])
+		if err != nil || page < 1 {
+			page = 1
+		}
+
+		ctx, err := getTagCtx(client, userInfo, tag, page)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		views.Photostream(w, ctx)
+	}
+
+	route.HandleFunc("/tags/:tag", tagHandler)
+	route.HandleFunc("/tags/:tag/:page", tagHandler)
 
 	serve.Serve(*port, *socket, route.Default)
 }

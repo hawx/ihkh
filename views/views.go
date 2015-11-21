@@ -5,6 +5,7 @@ import "html/template"
 var (
 	Photostream = template.Must(template.New("photostream").Parse(photostream)).Execute
 	Sets        = template.Must(template.New("sets").Parse(sets)).Execute
+	Tags        = template.Must(template.New("tags").Parse(tags)).Execute
 )
 
 type PhotosCtx struct {
@@ -21,6 +22,13 @@ type SetsCtx struct {
 	UserInfo UserInfo
 	Width    int
 	Sets     []Set
+}
+
+type TagsCtx struct {
+	Title    string
+	UserInfo UserInfo
+	Width    int
+	Tags     []string
 }
 
 type Photo struct {
