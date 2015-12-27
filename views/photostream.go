@@ -29,4 +29,34 @@ const photostream = pre + `<div class="photos">
       <p><a href="http://hawx.me/code/ihkh">ihkh</a> based on <a href="http://ihardlyknowher.com">ihardlyknowher</a></p>
     </li>
   </ul>
-</div>` + post
+</div>` + scripts + post
+
+const scripts = `<script type="text/javascript">
+window.onload = function() {
+  var idx = 0, els = document.getElementsByClassName('photo'), len = els.length;
+
+  function showCurrent() {
+    els[idx].scrollIntoView(true);
+  }
+
+  function handleKeyPress(e) {
+    var ch = String.fromCharCode(e.keyCode || e.charCode);
+
+    switch (ch) {
+      case 'j':
+        idx++;
+        if (idx >= len) { idx = len - 1; }
+        break;
+
+      case 'k':
+        idx--;
+        if (idx < 0) { idx = 0; }
+        break;
+    }
+
+    showCurrent();
+  }
+
+  document.onkeypress = handleKeyPress;
+}
+</script>`
