@@ -43,8 +43,10 @@ const pre = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://ww
       div.settings form input[type='radio'] { margin-left: 2em; }
 
       div.photos { margin-top: 30px; }
-      div.photos li.photo { margin: 0 auto; line-height: 0; margin-bottom: 30px; }
-      div.photos li.pagers, div.photos li.footer { color: #333; margin: 0 auto; text-align: center; position: relative; margin-bottom: 30px; font: 14px helvetica,sans-serif; }
+      div.photos ul { display: flex; justify-content: center; flex-direction: column; }
+      div.photos li { margin: 0 auto; line-height: 0; padding: 1rem 0; }
+      div.photos img { max-width: 95vw; max-height: 95vh; }
+      div.photos li.pagers, div.photos li.footer { color: #333; text-align: center; position: relative; font: 14px helvetica,sans-serif; }
       div.photos li.pagers div.left { position: absolute; bottom: 0; left: 0; }
       div.photos li.pagers div.right { position: absolute; bottom: 0; right: 0; }
       div.photos li.pagers a { color: #333; }

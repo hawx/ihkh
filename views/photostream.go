@@ -3,9 +3,9 @@ package views
 const photostream = pre + `<div class="photos">
   <ul>
     {{ range .Photos }}
-    <li class="photo" id="photo_{{.Id}}" style="width: {{.Width}}px;">
+    <li class="photo" id="photo_{{.Id}}">
       <a href="{{$.UserInfo.PhotosUrl}}{{.Id}}/">
-        <img src="{{.Src}}" alt="{{.Id}}" style="width: {{.Width}}px; {{ if .Height }}height: {{.Height}}px{{ end }}" />
+        <img src="{{.Src}}" alt="{{.Id}}" />
       </a>
     </li>
     {{ end }}
