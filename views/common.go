@@ -42,7 +42,6 @@ const pre = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://ww
       div.settings form p { margin-top: 1.5em; margin-bottom: 0; }
       div.settings form input[type='radio'] { margin-left: 2em; }
 
-      div.photos { margin-top: 30px; }
       div.photos ul { display: flex; justify-content: center; flex-direction: column; }
       div.photos li { margin: 0 auto; line-height: 0; padding: 1rem 0; }
       div.photos img { max-width: 95vw; max-height: 95vh; }
