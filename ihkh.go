@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"hawx.me/code/ihkh/flickr"
@@ -14,22 +15,16 @@ import (
 	"hawx.me/code/serve"
 )
 
-var (
-	port   = flag.String("port", "8080", "")
-	socket = flag.String("socket", "", "")
-	userId = flag.String("user-id", "", "")
-	apiKey = flag.String("api-key", "", "")
-)
-
 type handler struct {
 	client   flickr.Client
 	userInfo views.UserInfo
+	pageSize int
 
 	listView func(io.Writer, interface{}) error
 	showView func(io.Writer, interface{}) error
 
 	getAll func(flickr.Client, views.UserInfo) (interface{}, error)
-	get    func(flickr.Client, views.UserInfo, string, int) (views.PhotosCtx, error)
+	get    func(flickr.Client, views.UserInfo, string, int, int) (views.PhotosCtx, error)
 }
 
 func (h *handler) List() http.HandlerFunc {
@@ -55,7 +50,7 @@ func (h *handler) Show() http.HandlerFunc {
 			page = 1
 		}
 
-		ctx, err := h.get(h.client, h.userInfo, param, page)
+		ctx, err := h.get(h.client, h.userInfo, param, page, h.pageSize)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(500)
@@ -66,8 +61,8 @@ func (h *handler) Show() http.HandlerFunc {
 	}
 }
 
-func getIndex(client flickr.Client, userInfo views.UserInfo, _ string, page int) (views.PhotosCtx, error) {
-	resp, err := client.PublicPhotos(userInfo.Id, 10, page)
+func getIndex(client flickr.Client, userInfo views.UserInfo, _ string, page, pageSize int) (views.PhotosCtx, error) {
+	resp, err := client.PublicPhotos(userInfo.Id, pageSize, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
 	}
@@ -119,13 +114,13 @@ func getAllSets(client flickr.Client, userInfo views.UserInfo) (interface{}, err
 	return ctx, nil
 }
 
-func getSet(client flickr.Client, userInfo views.UserInfo, photosetId string, page int) (views.PhotosCtx, error) {
+func getSet(client flickr.Client, userInfo views.UserInfo, photosetId string, page, pageSize int) (views.PhotosCtx, error) {
 	info, err := client.PhotosetInfo(userInfo.Id, photosetId)
 	if err != nil {
 		return views.PhotosCtx{}, err
 	}
 
-	resp, err := client.Photoset(userInfo.Id, photosetId, 10, page)
+	resp, err := client.Photoset(userInfo.Id, photosetId, pageSize, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
 	}
@@ -174,8 +169,8 @@ func getAllTags(client flickr.Client, userInfo views.UserInfo) (interface{}, err
 	return ctx, nil
 }
 
-func getTag(client flickr.Client, userInfo views.UserInfo, tag string, page int) (views.PhotosCtx, error) {
-	resp, err := client.Tag(userInfo.Id, tag, 10, page)
+func getTag(client flickr.Client, userInfo views.UserInfo, tag string, page, pageSize int) (views.PhotosCtx, error) {
+	resp, err := client.Tag(userInfo.Id, tag, pageSize, page)
 	if err != nil {
 		return views.PhotosCtx{}, err
 	}
@@ -206,6 +201,29 @@ func getTag(client flickr.Client, userInfo views.UserInfo, tag string, page int)
 }
 
 func main() {
+	const usage = `Usage: ihkh [OPTIONS]
+
+  A minimalist Flickr viewer.
+
+ OPTIONS
+   --user-id ID      # Your Flickr userid, like XXXXXXXX@XXX
+   --api-key KEY     # Your Flickr API key
+   --page-size NUM   # Number of photos per page (default: 10)
+
+   --port PORT       # Port to serve on (default: 8080)
+   --socket PATH     # Socket to serve at, instead
+
+`
+
+	var (
+		port     = flag.String("port", "8080", "")
+		socket   = flag.String("socket", "", "")
+		userId   = flag.String("user-id", "", "")
+		apiKey   = flag.String("api-key", "", "")
+		pageSize = flag.Int("page-size", 10, "")
+	)
+
+	flag.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 	flag.Parse()
 
 	client := flickr.New(*apiKey)
@@ -227,6 +245,7 @@ func main() {
 	index := &handler{
 		client:   client,
 		userInfo: userInfo,
+		pageSize: *pageSize,
 		showView: views.Photostream,
 		get:      getIndex,
 	}
@@ -236,6 +255,7 @@ func main() {
 	sets := &handler{
 		client:   client,
 		userInfo: userInfo,
+		pageSize: *pageSize,
 		listView: views.Sets,
 		showView: views.Photostream,
 		getAll:   getAllSets,
@@ -249,6 +269,7 @@ func main() {
 	tags := &handler{
 		client:   client,
 		userInfo: userInfo,
+		pageSize: *pageSize,
 		listView: views.Tags,
 		showView: views.Photostream,
 		getAll:   getAllTags,
