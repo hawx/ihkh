@@ -1,12 +1,4 @@
-package views
-
-import "html/template"
-
-var (
-	Photostream = template.Must(template.New("photostream").Parse(photostream)).Execute
-	Sets        = template.Must(template.New("sets").Parse(sets)).Execute
-	Tags        = template.Must(template.New("tags").Parse(tags)).Execute
-)
+package handler
 
 type PhotosCtx struct {
 	Title    string
@@ -29,21 +21,21 @@ type TagsCtx struct {
 }
 
 type Photo struct {
-	Id     string
+	ID     string
 	Src    string
 	Width  int
 	Height int
 }
 
 type Set struct {
-	Id    string
+	ID    string
 	Title string
 }
 
 type UserInfo struct {
-	Id         string
-	PhotosUrl  string
-	ProfileUrl string
+	ID         string
+	PhotosURL  string
+	ProfileURL string
 	RealName   string
 	UserName   string
 }

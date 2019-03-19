@@ -8,7 +8,7 @@ import (
 type PhotosetsResponse struct {
 	Photosets struct {
 		Photoset []struct {
-			Id    string `xml:"id,attr"`
+			ID    string `xml:"id,attr"`
 			Title string `xml:"title"`
 		} `xml:"photoset"`
 	} `xml:"photosets"`
@@ -30,19 +30,19 @@ type PhotosetResponse struct {
 		Pages   int `xml:"pages,attr"`
 
 		Photo []struct {
-			Id     string `xml:"id,attr"`
-			Url    string `xml:"url_l,attr"`
+			ID     string `xml:"id,attr"`
+			URL    string `xml:"url_l,attr"`
 			Height int    `xml:"height_l,attr"`
 			Width  int    `xml:"width_l,attr"`
 		} `xml:"photo"`
 	} `xml:"photoset"`
 }
 
-func (client *httpClient) Photoset(nsid, photosetId string, perPage, page int) (PhotosetResponse, error) {
+func (client *httpClient) Photoset(nsid, photosetID string, perPage, page int) (PhotosetResponse, error) {
 	var v PhotosetResponse
 	_, err := client.get("flickr.photosets.getPhotos", url.Values{
 		"user_id":     {nsid},
-		"photoset_id": {photosetId},
+		"photoset_id": {photosetID},
 		"page":        {strconv.Itoa(page)},
 		"per_page":    {strconv.Itoa(perPage)},
 		"extras":      {"url_l"},
@@ -57,11 +57,11 @@ type PhotosetInfo struct {
 	} `xml:"photoset"`
 }
 
-func (client *httpClient) PhotosetInfo(nsid string, photosetId string) (PhotosetInfo, error) {
+func (client *httpClient) PhotosetInfo(nsid, photosetID string) (PhotosetInfo, error) {
 	var v PhotosetInfo
 	_, err := client.get("flickr.photosets.getInfo", url.Values{
 		"user_id":     {nsid},
-		"photoset_id": {photosetId},
+		"photoset_id": {photosetID},
 	}, &v)
 
 	return v, err

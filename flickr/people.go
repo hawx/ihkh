@@ -8,8 +8,8 @@ import (
 type UserInfoResponse struct {
 	Username   string `xml:"person>username"`
 	Realname   string `xml:"person>realname"`
-	PhotosUrl  string `xml:"person>photosurl"`
-	ProfileUrl string `xml:"person>profileurl"`
+	PhotosURL  string `xml:"person>photosurl"`
+	ProfileURL string `xml:"person>profileurl"`
 }
 
 func (client *httpClient) UserInfo(nsid string) (UserInfoResponse, error) {
@@ -27,8 +27,8 @@ type PhotosResponse struct {
 		Total   int `xml:"total,attr"`
 
 		Photo []struct {
-			Id     string `xml:"id,attr"`
-			Url    string `xml:"url_l,attr"`
+			ID     string `xml:"id,attr"`
+			URL    string `xml:"url_l,attr"`
 			Height int    `xml:"height_l,attr"`
 			Width  int    `xml:"width_l,attr"`
 		} `xml:"photo"`

@@ -15,8 +15,8 @@ type Client interface {
 	PublicPhotos(nsid string, perPage, page int) (PhotosResponse, error)
 
 	Photosets(nsid string) (PhotosetsResponse, error)
-	Photoset(nsid, photosetId string, perPage, page int) (PhotosetResponse, error)
-	PhotosetInfo(nsid string, photosetId string) (PhotosetInfo, error)
+	Photoset(nsid, photosetID string, perPage, page int) (PhotosetResponse, error)
+	PhotosetInfo(nsid string, photosetID string) (PhotosetInfo, error)
 
 	Tags(nsid string) (TagsResponse, error)
 	Tag(nsid, tag string, perPage, page int) (PhotosResponse, error)
