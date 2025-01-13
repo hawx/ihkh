@@ -29,6 +29,9 @@ func (client *httpClient) get(method string, params url.Values, v interface{}) (
 	req.Header.Add("User-Agent", client.UserAgent)
 
 	resp, err := client.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making http request: %w", err)
+	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("Received %d response", resp.StatusCode)
 	}
